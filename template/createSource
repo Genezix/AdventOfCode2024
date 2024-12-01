@@ -1,0 +1,17 @@
+#!/bin/bash
+year=$1
+counter=$2
+dir=$3
+templateFileName=$4
+
+dayDir="${dir}/day${counter}"
+mkdir "${dayDir}"
+
+fileName=${templateFileName//0/${counter}}
+file="${dayDir}/${fileName}.kt"
+
+cp $templateFileName $file
+sed -i "s/0/${counter}/g" $file
+sed -i "s/9999/${year}/g" $file
+
+exit 0
