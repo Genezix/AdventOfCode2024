@@ -1,12 +1,21 @@
 package adventofcode2024.day6
 
-import kotlin.test.assertEquals
 import org.junit.Test
+import kotlin.test.assertEquals
 
 internal class Day6KtTest {
     private val program = ProgramDay6(
         brutInputs = listOf(
-            ""
+            "....#.....",
+            ".........#",
+            "..........",
+            "..#.......",
+            ".......#..",
+            "..........",
+            ".#..^.....",
+            "........#.",
+            "#.........",
+            "......#...",
         ).map { it },
         debug = true
     )
@@ -14,7 +23,7 @@ internal class Day6KtTest {
     @Test
     fun part1() {
         assertEquals(
-            expected = "",
+            expected = "41",
             actual = program.part1()
         )
     }
@@ -22,7 +31,7 @@ internal class Day6KtTest {
     @Test
     fun part2() {
         assertEquals(
-            expected = "",
+            expected = "6",
             actual = program.part2()
         )
     }
