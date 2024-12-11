@@ -1,36 +1,33 @@
 package adventofcode2024.day8
 
+import common.Grid2D
+import common.Position2D
 import common.Program
 
 class ProgramDay8(brutInputs: List<String>, private val debug: Boolean = false) : Program {
-    private val inputs = brutInputs.flatMapIndexed { y: Int, line: String ->
-        line.mapIndexed { x, char -> Position(char, x, y) }
-    }
+    private val grid = Grid2D.build(brutInputs)
 
-    private val maxY = brutInputs.size - 1
-    private val maxX = brutInputs.first().length - 1
-
-    override fun part1(): String = inputs.asSequence()
-        .map { it.name }
+    override fun part1(): String = grid.positions.asSequence()
+        .map { it.value }
         .distinct()
         .filter { it != '.' }
         .flatMap { getAllAntinodeOf(it) }
         .distinct()
-//        .apply { printAll(this) }
+//        .apply { grid.print(this.map { it.toPosition2D() }) }
         .count().toString()
 
-    override fun part2(): String = inputs.asSequence()
-        .map { it.name }
+    override fun part2(): String = grid.positions.asSequence()
+        .map { it.value }
         .distinct()
         .filter { it != '.' }
         .flatMap { getAllAntinodeOf(it, true) }
         .distinct()
-//        .apply { printAll(this) }
+//        .apply { grid.print(this.map { it.toPosition2D() }) }
         .count().toString()
 
 
     private fun getAllAntinodeOf(name: Char, infinity: Boolean = false): List<Antinode> {
-        val antennas = inputs.filter { it.name == name }
+        val antennas = grid.positions.filter { it.value == name }
 
         val linearFunctions = antennas.flatMap { first ->
             antennas.mapNotNull { second ->
@@ -48,7 +45,7 @@ class ProgramDay8(brutInputs: List<String>, private val debug: Boolean = false) 
             if (infinity) {
                 var newX = it.end.x + deltaX
                 var newY = it.end.y + deltaY
-                while (newX in 0..maxX && newY in 0..maxY) {
+                while (newX in 0..grid.maxX && newY in 0..grid.maxY) {
                     antinodes.add(Antinode(newX, newY))
                     newX += deltaX
                     newY += deltaY
@@ -56,8 +53,8 @@ class ProgramDay8(brutInputs: List<String>, private val debug: Boolean = false) 
             } else {
                 val newX = it.start.x + deltaX
                 val newY = it.start.y + deltaY
-                if (newX in 0..maxX && newY in 0..maxY
-                    && inputs.none { it.x == newX && it.y == newY && it.name == name }
+                if (newX in 0..grid.maxX && newY in 0..grid.maxY
+                    && grid.positions.none { it.x == newX && it.y == newY && it.value == name }
                 ) {
                     antinodes.add(Antinode(newX, newY))
                 }
@@ -67,18 +64,9 @@ class ProgramDay8(brutInputs: List<String>, private val debug: Boolean = false) 
         }
     }
 
-    private fun printAll(sequence: Sequence<Antinode>) {
-        (0..maxY).forEach { y ->
-            (0..maxX).forEach { x ->
-                val name = inputs.first { it.x == x && it.y == y }.name
-                print(sequence.find { it.x == x && it.y == y }?.let { '#' } ?: name)
-            }
-            println()
-        }
+    data class Antinode(val x: Int, val y: Int) {
+        fun toPosition2D() : Position2D = Position2D('#', this.x, this.y)
     }
-
-    data class Position(val name: Char, val x: Int, val y: Int)
-    data class Antinode(val x: Int, val y: Int)
-    data class LinearFunction(val start: Position, val end: Position)
+    data class LinearFunction(val start: Position2D, val end: Position2D)
 }
 

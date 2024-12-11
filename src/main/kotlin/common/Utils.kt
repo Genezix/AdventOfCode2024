@@ -55,3 +55,9 @@ fun List<String>.parseGroupsList(): List<List<String>> {
         }
     }
 }
+
+fun <T> List<String>.parseGrid(builder: (Int, Int, Char) -> T): List<T> = this.flatMapIndexed { y: Int, line: String ->
+    line.mapIndexed { x, char -> builder(x, y, char) }
+}
+
+fun List<String>.parsePositionGrid(): List<Position2D> = this.parseGrid { x, y, char -> Position2D(char, x, y) }

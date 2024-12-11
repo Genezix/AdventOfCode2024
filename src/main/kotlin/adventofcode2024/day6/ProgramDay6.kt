@@ -1,6 +1,11 @@
 package adventofcode2024.day6
 
-import adventofcode2024.day6.ProgramDay6.Position.*
+import adventofcode2024.day6.ProgramDay6.Position.Gard
+import adventofcode2024.day6.ProgramDay6.Position.Obstacle
+import adventofcode2024.day6.ProgramDay6.Position.Visited
+import adventofcode2024.day6.ProgramDay6.Position.VisitedRange
+import common.Grid2D
+import common.Heading4
 import common.Program
 import kotlin.math.abs
 
@@ -38,7 +43,7 @@ class ProgramDay6(brutInputs: List<String>, private val debug: Boolean = false) 
         return nbLoop
     }
 
-    fun moveToNextPosition(
+    private fun moveToNextPosition(
         obstacle: List<Obstacle>,
         gard: Gard,
         maxX: Int,
@@ -50,45 +55,45 @@ class ProgramDay6(brutInputs: List<String>, private val debug: Boolean = false) 
         val heading = gard.heading
 
         val nearestObstacle = when (heading) {
-            Heading.N -> obstacle.filter { it.x == x && it.y < y }.minByOrNull { abs(it.y - y) }
-            Heading.E -> obstacle.filter { it.x > x && it.y == y }.minByOrNull { abs(it.x - x) }
-            Heading.S -> obstacle.filter { it.x == x && it.y > y }.minByOrNull { abs(it.y - y) }
-            Heading.W -> obstacle.filter { it.x < x && it.y == y }.minByOrNull { abs(it.x - x) }
+            Heading4.N -> obstacle.filter { it.x == x && it.y < y }.minByOrNull { abs(it.y - y) }
+            Heading4.E -> obstacle.filter { it.x > x && it.y == y }.minByOrNull { abs(it.x - x) }
+            Heading4.S -> obstacle.filter { it.x == x && it.y > y }.minByOrNull { abs(it.y - y) }
+            Heading4.W -> obstacle.filter { it.x < x && it.y == y }.minByOrNull { abs(it.x - x) }
         }
             ?: return path.plus(
                 VisitedRange(
                     when (heading) {
-                        Heading.E -> IntRange(x, maxX)
-                        Heading.W -> IntRange(0, x)
+                        Heading4.E -> IntRange(x, maxX)
+                        Heading4.W -> IntRange(0, x)
                         else -> IntRange(x, x)
                     }, when (heading) {
-                        Heading.N -> IntRange(0, y)
-                        Heading.S -> IntRange(y, maxX)
+                        Heading4.N -> IntRange(0, y)
+                        Heading4.S -> IntRange(y, maxX)
                         else -> IntRange(y, y)
                     }, heading
                 )
             )
 
         val nextX = when (heading) {
-            Heading.E -> nearestObstacle.x - 1
-            Heading.W -> nearestObstacle.x + 1
+            Heading4.E -> nearestObstacle.x - 1
+            Heading4.W -> nearestObstacle.x + 1
             else -> gard.x
         }
 
         val nextY = when (heading) {
-            Heading.N -> nearestObstacle.y + 1
-            Heading.S -> nearestObstacle.y - 1
+            Heading4.N -> nearestObstacle.y + 1
+            Heading4.S -> nearestObstacle.y - 1
             else -> gard.y
         }
 
         val newVisited = VisitedRange(
             when (heading) {
-                Heading.E -> IntRange(x, nextX)
-                Heading.W -> IntRange(nextX, x)
+                Heading4.E -> IntRange(x, nextX)
+                Heading4.W -> IntRange(nextX, x)
                 else -> IntRange(x, x)
             }, when (heading) {
-                Heading.N -> IntRange(nextY, y)
-                Heading.S -> IntRange(y, nextY)
+                Heading4.N -> IntRange(nextY, y)
+                Heading4.S -> IntRange(y, nextY)
                 else -> IntRange(y, y)
             }, heading
         )
@@ -112,21 +117,13 @@ class ProgramDay6(brutInputs: List<String>, private val debug: Boolean = false) 
     data class Grid(val obstacle: List<Obstacle>, val maxX: Int, val maxY: Int, val gard: Gard) {
         companion object {
             fun from(inputs: List<String>): Grid {
-                val positions = inputs.flatMapIndexed { y, line ->
-                    line.mapIndexed { x, c ->
-                        when {
-                            c == '#' -> Obstacle(x, y)
-                            c != '.' -> Gard(x, y, Heading.N)
-                            else -> null
-                        }
-                    }
-                }
+                val grid = Grid2D.build(inputs)
 
                 return Grid(
-                    obstacle = positions.mapNotNull { it as? Obstacle },
-                    maxX = inputs.first().length - 1,
-                    maxY = inputs.size - 1,
-                    gard = positions.firstNotNullOf { it as? Gard },
+                    obstacle = grid.positions.filter { it.value == '#' }.map { Obstacle(it.x, it.y) },
+                    maxX = grid.maxX,
+                    maxY = grid.maxY,
+                    gard = grid.positions.first { it.value == '^' }.let { Gard(it.x, it.y, Heading4.N) },
                 )
             }
         }
@@ -134,19 +131,8 @@ class ProgramDay6(brutInputs: List<String>, private val debug: Boolean = false) 
 
     sealed class Position {
         data class Obstacle(val x: Int, val y: Int)
-        data class VisitedRange(val x: IntRange, val y: IntRange, val heading: Heading)
-        data class Visited(val x: Int, val y: Int, val heading: Heading)
-        data class Gard(val x: Int, val y: Int, val heading: Heading)
-    }
-
-    enum class Heading {
-        N, E, S, W;
-
-        fun rotateRight() = when (this) {
-            N -> E
-            E -> S
-            S -> W
-            W -> N
-        }
+        data class VisitedRange(val x: IntRange, val y: IntRange, val heading: Heading4)
+        data class Visited(val x: Int, val y: Int, val heading: Heading4)
+        data class Gard(val x: Int, val y: Int, val heading: Heading4)
     }
 }
