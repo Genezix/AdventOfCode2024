@@ -44,7 +44,7 @@ enum class Heading8 {
     }
 }
 
-data class Position2D(val value: Char, val x: Int, val y: Int) {
+data class Position2D(val x: Int, val y: Int, val value: Char = '.') {
     val neighbors: MutableList<Position2D> = mutableListOf()
 }
 

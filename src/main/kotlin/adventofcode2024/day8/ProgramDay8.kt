@@ -64,9 +64,7 @@ class ProgramDay8(brutInputs: List<String>, private val debug: Boolean = false) 
         }
     }
 
-    data class Antinode(val x: Int, val y: Int) {
-        fun toPosition2D() : Position2D = Position2D('#', this.x, this.y)
-    }
+    data class Antinode(val x: Int, val y: Int)
     data class LinearFunction(val start: Position2D, val end: Position2D)
 }
 
