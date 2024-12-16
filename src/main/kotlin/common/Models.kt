@@ -44,7 +44,7 @@ enum class Heading8 {
     }
 }
 
-data class Position2D(val x: Int, val y: Int, val value: Char = '.') {
+data class Position2D(var x: Int, var y: Int, var value: Char = '.') {
     val neighbors: MutableList<Position2D> = mutableListOf()
 }
 
@@ -74,7 +74,7 @@ data class Grid2D(val positions: List<Position2D>, val maxX: Int, val maxY: Int)
 
 data class Grid2DWith4Neighbor(val positions: List<Position2D>, val maxX: Int, val maxY: Int) {
     companion object {
-        fun build(inputs: List<String>, filterOnValue: Boolean = false): Grid2D {
+        fun build(inputs: List<String>, filterOnValue: Boolean = false): Grid2DWith4Neighbor {
             val positions = inputs.parsePositionGrid()
             val maxX = (inputs.first().length - 1)
             val maxY = (inputs.size - 1)
@@ -101,7 +101,20 @@ data class Grid2DWith4Neighbor(val positions: List<Position2D>, val maxX: Int, v
                     }
             }
 
-            return Grid2D(positions, maxX, maxY)
+            return Grid2DWith4Neighbor(positions, maxX, maxY)
         }
+
+    }
+
+    fun print() {
+        (0..this.maxY).forEach { y ->
+            (0..this.maxX).forEach { x ->
+                print(
+                    this.positions.first { it.x == x && it.y == y }.value
+                )
+            }
+            println()
+        }
+        println()
     }
 }
