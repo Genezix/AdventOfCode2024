@@ -15,10 +15,12 @@ fun executePart(day: String, part: String, partFunction: (input: List<String>) -
 
     val startTime = System.currentTimeMillis()
     val resultPart = partFunction(input)
-    val resultTime = (System.currentTimeMillis() - startTime) / 1000
+    val time = System.currentTimeMillis() - startTime
+    val resultTime = time / 1000
+    val resultTimeMillis = time % 1000
 
     println("=======================")
     println("Result part $part => $resultPart")
-    println("Time $resultTime seconds")
+    println("Time $resultTime s $resultTimeMillis ms ")
     println("=======================")
 }
