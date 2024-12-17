@@ -16,6 +16,13 @@ enum class Heading4 {
         S -> E
         W -> S
     }
+
+    fun toArrow() = when(this) {
+        N -> '^'
+        E -> '>'
+        S -> 'v'
+        W -> '<'
+    }
 }
 
 enum class Heading8 {
@@ -46,6 +53,13 @@ enum class Heading8 {
 
 data class Position2D(var x: Int, var y: Int, var value: Char = '.') {
     val neighbors: MutableList<Position2D> = mutableListOf()
+
+    fun getNeighbor(heading4: Heading4) = when (heading4) {
+        Heading4.N -> neighbors.firstOrNull { it.x == this.x && it.y == this.y - 1 }
+        Heading4.E -> neighbors.firstOrNull { it.x == this.x + 1 && it.y == this.y }
+        Heading4.S -> neighbors.firstOrNull { it.x == this.x && it.y == this.y + 1 }
+        Heading4.W -> neighbors.firstOrNull { it.x == this.x - 1 && it.y == this.y }
+    }
 }
 
 data class Grid2D(val positions: List<Position2D>, val maxX: Int, val maxY: Int) {
