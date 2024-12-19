@@ -32,7 +32,8 @@ class ProgramDay16(brutInputs: List<String>, private val debug: Boolean = false)
     ) {
         if (cache[target] != null && cache[target]!! < score) return
 
-        val nextPosition = this.takeIf { (it.value == '.' || it == target) }
+        val nextPosition = this
+            .takeIf { (it.value == '.' || it == target) }
             .takeIf { cache[it] == null || (cache[it]!! + 1000 >= score) }
 
         if (target == nextPosition) {

@@ -51,7 +51,7 @@ enum class Heading8 {
     }
 }
 
-data class Position2D(var x: Int, var y: Int, var value: Char = '.') {
+data class Position2D(var x: Int, var y: Int, var value: Char = '.', var score: Long? = null) {
     val neighbors: MutableList<Position2D> = mutableListOf()
 
     fun getNeighbor(heading4: Heading4) = when (heading4) {
@@ -88,11 +88,26 @@ data class Grid2D(val positions: List<Position2D>, val maxX: Int, val maxY: Int)
 
 data class Grid2DWith4Neighbor(val positions: List<Position2D>, val maxX: Int, val maxY: Int) {
     companion object {
+        fun build(positions: List<Position2D>, maxX: Int?, maxY: Int?): Grid2DWith4Neighbor {
+            val realMaxY = maxY ?: positions.maxOf { it.y }
+            val realMaxX = maxX ?: positions.maxOf { it.x }
+            val allPositions = (0..realMaxY).flatMap { y ->
+                (0..realMaxX).map { x ->
+                    positions.firstOrNull { it.x == x && it.y == y } ?: Position2D(x, y, '.')
+                }
+            }
+            return buildGridWithNeighbors(allPositions, realMaxX, realMaxY)
+        }
+
         fun build(inputs: List<String>, filterOnValue: Boolean = false): Grid2DWith4Neighbor {
             val positions = inputs.parsePositionGrid()
             val maxX = (inputs.first().length - 1)
             val maxY = (inputs.size - 1)
 
+            return buildGridWithNeighbors(positions, maxX, maxY, filterOnValue)
+        }
+
+        private fun buildGridWithNeighbors(positions: List<Position2D>, maxX: Int, maxY: Int, filterOnValue: Boolean = false) : Grid2DWith4Neighbor{
             positions.forEach { position ->
                 positions.firstOrNull { it.x == position.x + 1 && it.y == position.y }
                     .takeIf { !filterOnValue || it?.value == position.value }?.let {
@@ -117,7 +132,6 @@ data class Grid2DWith4Neighbor(val positions: List<Position2D>, val maxX: Int, v
 
             return Grid2DWith4Neighbor(positions, maxX, maxY)
         }
-
     }
 
     fun print() {
@@ -125,6 +139,19 @@ data class Grid2DWith4Neighbor(val positions: List<Position2D>, val maxX: Int, v
             (0..this.maxX).forEach { x ->
                 print(
                     this.positions.first { it.x == x && it.y == y }.value
+                )
+            }
+            println()
+        }
+        println()
+    }
+
+    fun print(sequence: Sequence<Position2D>) {
+        (0..this.maxY).forEach { y ->
+            (0..this.maxX).forEach { x ->
+                print(
+                    sequence.find { it.x == x && it.y == y }?.value
+                        ?: this.positions.first { it.x == x && it.y == y }.value
                 )
             }
             println()
