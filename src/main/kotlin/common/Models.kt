@@ -1,7 +1,5 @@
 package common
 
-import adventofcode2024.day6.ProgramDay6
-
 enum class Heading4 {
     N, E, S, W;
 
@@ -53,7 +51,13 @@ enum class Heading8 {
     }
 }
 
-data class Position2D(var x: Int, var y: Int, var value: Char = '.', var score: Long? = null) {
+data class Position2D(
+    var x: Int,
+    var y: Int,
+    var value: Char = '.',
+    var score: Long? = null,
+    var passed: Boolean = false,
+) {
     val neighbors: MutableList<Position2D> = mutableListOf()
 
     fun getNeighbor(heading4: Heading4) = when (heading4) {

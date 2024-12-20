@@ -4,7 +4,11 @@ import common.Grid2DWith4Neighbor
 import common.Heading4
 import common.Position2D
 import common.Program
+import kotlin.math.abs
 
+// 45773 to low
+// 49165 to low
+// 60650 ????
 class ProgramDay20(val brutInputs: List<String>, private val debug: Boolean = false, val maxPicoSeconds: Long = 100) :
     Program {
     private val grid = Grid2DWith4Neighbor.build(brutInputs)
@@ -28,7 +32,6 @@ class ProgramDay20(val brutInputs: List<String>, private val debug: Boolean = fa
             }.map { it.score!! - position.score!! - 2 }
         }
 
-        print(shortcuts.sorted().groupBy { it }.map { Pair(it.key, it.value.size) })
         return shortcuts.count { it >= maxPicoSeconds }.toString()
     }
 
@@ -45,75 +48,59 @@ class ProgramDay20(val brutInputs: List<String>, private val debug: Boolean = fa
         }
 
         val shortcuts = grid.positions.filter { it.value == '.' || it == start }.flatMap { position ->
-            val shortcutDestinations = position.findShortcuts(listOf(position))
-
-            shortcutDestinations.mapNotNull { dest ->
-                var poss: List<Position2D> = listOf(position)
-                val listToClear = mutableListOf<Position2D>()
-
-                val previousDest = dest.score!!
-
-                while (poss.isNotEmpty()) {
-                    poss = poss.flatMap { it.calculateScoreAndGetNextPosition(dest, listOf('.'), listOf('#')) }.distinct()
-                    listToClear.addAll(poss)
-                }
-
-                Shortcut(position, dest, previousDest - dest.score!!).also {
-                    dest.score = previousDest
-                    listToClear.forEach { it.score = null }
-                }.takeIf { it.picoseconds > maxPicoSeconds }
-            }
+            position.getAllInRange(listOf('.', 'E'), 20)
         }
 
-        val all = shortcuts.groupBy { Pair(it.start, it.end) }.map { it.value.maxBy { it.picoseconds } }
-
-        println(all.sortedBy { it.picoseconds }
-            .groupBy { it.picoseconds }
-            .map { Pair(it.key, it.value.size) })
-
-        return all.count().toString()
+        return shortcuts.count().toString()
     }
 
+    private fun Position2D.getAllInRange(filter: List<Char>, range: Int): List<Shortcut> {
+        return grid.positions.filter {
+            abs(this.x - it.x) + abs(this.y - it.y) <= range
+                    && filter.contains(it.value)
+                    && this.score!! < it.score!!
+        }.mapNotNull {
+            val xy = abs(this.x - it.x) + abs(this.y - it.y)
+            val picosecondsWon = (it.score!! - this.score!!) - xy
+            Shortcut(this, it, picosecondsWon).takeIf { picosecondsWon >= maxPicoSeconds }
+        }
+    }
 
-    private fun Position2D.findShortcuts(currentShortcut: List<Position2D>): List<Position2D> {
-        if (currentShortcut.size > 21) return emptyList()
+    private fun Position2D.findShortcuts1(original: Position2D): List<Shortcut> {
+        if (this.score!! - original.score!! > 20) return emptyList()
 
         val neighbors = Heading4.values().mapNotNull { heading ->
-            this.getNeighbor(heading).takeIf { !currentShortcut.contains(it) }
+            this.getNeighbor(heading)?.takeIf { !it.passed }
         }
-
-        val first = currentShortcut.first()
 
         return neighbors.flatMap { neighbor ->
             if (neighbor.value == '.' || neighbor.value == 'E') {
-                if (first.score!! < neighbor.score!!) listOf(neighbor) else listOf()
+                val previousDelta = neighbor.score!! - original.score!!
+                val newDelta = this.score!! - original.score!!
+                val picosecondsWon = (previousDelta - newDelta) - 1
+
+                val afterDot = if (neighbor.value == '.' && newDelta < 19) {
+                    val previousScore = neighbor.score
+                    neighbor.score = this.score!! + 1
+                    neighbor.passed = true
+                    neighbor.findShortcuts1(original).also {
+                        neighbor.score = previousScore
+                        neighbor.passed = false
+                    }
+                } else emptyList()
+
+                listOfNotNull(
+                    Shortcut(original, neighbor, picosecondsWon).takeIf { picosecondsWon >= maxPicoSeconds },
+                ) + afterDot
             } else {
-                neighbor.findShortcuts(currentShortcut.plus(neighbor))
+                neighbor.score = this.score!! + 1
+                neighbor.passed = true
+                neighbor.findShortcuts1(original).also {
+                    neighbor.score = null
+                    neighbor.passed = false
+                }
             }
         }
-
-//        if (currentShortcut.size > 21) return emptyList()
-//
-//        val origin = currentShortcut.first()
-//
-//        val neighbors = Heading4.values().mapNotNull { heading ->
-//            this.getNeighbor(heading)?.takeIf { !currentShortcut.contains(it) }
-//        }
-//
-//        return neighbors.flatMap { neighbor ->
-//            if (neighbor.value == '.') {
-//                listOfNotNull(Shortcut(
-//                    origin,
-//                    neighbor,
-//                    currentShortcut.size.toLong() - 1
-//                ).takeIf {
-//                    neighbor.score!! > origin.score!!
-//                            && it.picoseconds >= maxPicoSeconds
-//                })
-//            } else {
-//                neighbor.findShortcuts(currentShortcut.plus(neighbor))
-//            }
-//        }
     }
 
     data class Shortcut(val start: Position2D, val end: Position2D, val picoseconds: Long) 
