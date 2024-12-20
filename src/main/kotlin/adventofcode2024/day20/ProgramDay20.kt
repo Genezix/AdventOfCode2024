@@ -54,26 +54,18 @@ class ProgramDay20(val brutInputs: List<String>, private val debug: Boolean = fa
                 val previousDest = dest.score!!
 
                 while (poss.isNotEmpty()) {
-                    poss = poss.flatMap { it.calculateScoreAndGetNextPosition(dest, listOf(), listOf('#')) }.distinct()
+                    poss = poss.flatMap { it.calculateScoreAndGetNextPosition(dest, listOf('.'), listOf('#')) }.distinct()
                     listToClear.addAll(poss)
                 }
 
-                dest.score = previousDest
-                listToClear.forEach { it.score = null }
-
-                Shortcut(position, dest, previousDest - position.score!! - dest.score!!).also {
+                Shortcut(position, dest, previousDest - dest.score!!).also {
                     dest.score = previousDest
                     listToClear.forEach { it.score = null }
-                }.takeIf { it.picoseconds >= maxPicoSeconds }
+                }.takeIf { it.picoseconds > maxPicoSeconds }
             }
         }
 
-//        print(shortcuts
-//            .sortedBy { it.picoseconds }
-//            .groupBy { it.picoseconds }
-//            .map { Pair(it.key, it.value.size) })
-
-        val all = shortcuts.groupBy { Pair(it.start, it.end) }.map { it.value.minBy { it.picoseconds } }
+        val all = shortcuts.groupBy { Pair(it.start, it.end) }.map { it.value.maxBy { it.picoseconds } }
 
         println(all.sortedBy { it.picoseconds }
             .groupBy { it.picoseconds }
@@ -93,7 +85,7 @@ class ProgramDay20(val brutInputs: List<String>, private val debug: Boolean = fa
         val first = currentShortcut.first()
 
         return neighbors.flatMap { neighbor ->
-            if (neighbor.value == '.') {
+            if (neighbor.value == '.' || neighbor.value == 'E') {
                 if (first.score!! < neighbor.score!!) listOf(neighbor) else listOf()
             } else {
                 neighbor.findShortcuts(currentShortcut.plus(neighbor))

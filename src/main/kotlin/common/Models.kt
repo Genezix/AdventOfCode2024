@@ -68,7 +68,7 @@ data class Position2D(var x: Int, var y: Int, var value: Char = '.', var score: 
         obstacles: List<Char> = listOf('#'),
         frees: List<Char> = listOf('.'),
     ) : List<Position2D>{
-        return this.neighbors.filter { !obstacles.contains(it.value) }.mapNotNull { neighbor ->
+        return this.neighbors.filter { !obstacles.contains(it.value) || it == target }.mapNotNull { neighbor ->
             neighbor.getNextPositions(target, score!! + 1L, frees)
         }
     }
