@@ -31,7 +31,7 @@ class ProgramDay18(
         val start = grid.positions.first { it.x == 0 && it.y == 0 }
         val end = grid.positions.first { it.x == maxX && it.y == maxY }
         start.score = 0
-        start.find(end, 0)
+        start.calculateScoreOnMove(end, 0)
         return end.score
     }
 
@@ -60,7 +60,7 @@ class ProgramDay18(
             }
         } else {
             nextPosition?.also { if (it.score == null || it.score!! > score) it.score = score }
-                ?.find(target, score)
+                ?.calculateScoreOnMove(target, score)
         }
     }
 }

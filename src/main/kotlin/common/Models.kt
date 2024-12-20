@@ -1,5 +1,7 @@
 package common
 
+import adventofcode2024.day6.ProgramDay6
+
 enum class Heading4 {
     N, E, S, W;
 
@@ -59,6 +61,70 @@ data class Position2D(var x: Int, var y: Int, var value: Char = '.', var score: 
         Heading4.E -> neighbors.firstOrNull { it.x == this.x + 1 && it.y == this.y }
         Heading4.S -> neighbors.firstOrNull { it.x == this.x && it.y == this.y + 1 }
         Heading4.W -> neighbors.firstOrNull { it.x == this.x - 1 && it.y == this.y }
+    }
+
+    fun calculateScoreAndGetNextPosition(
+        target: Position2D,
+        obstacles: List<Char> = listOf('#'),
+        frees: List<Char> = listOf('.'),
+    ) : List<Position2D>{
+        return this.neighbors.filter { !obstacles.contains(it.value) }.mapNotNull { neighbor ->
+            neighbor.getNextPositions(target, score!! + 1L, frees)
+        }
+    }
+
+    private fun getNextPositions(
+        target: Position2D,
+        score: Long,
+        frees: List<Char>,
+    ) : Position2D? {
+        if (target.score != null && target.score!! < score) return null
+
+        val nextPosition = this
+            .takeIf { (frees.contains(it.value) || it == target) }
+            ?.takeIf { it.score == null || (it.score!! > score) }
+
+        if (target == nextPosition) {
+            if (target.score == null || target.score!! > score) {
+                target.score = score
+            }
+        } else {
+            return nextPosition?.also { if (it.score == null || it.score!! > score) it.score = score }
+        }
+        return null
+    }
+
+    fun calculateScoreOnMove(
+        target: Position2D,
+        score: Long,
+        obstacles: List<Char> = listOf('#'),
+        frees: List<Char> = listOf('.'),
+    ) {
+        this.neighbors.filter { !obstacles.contains(it.value) }.forEach { neighbor ->
+            neighbor.parsePosition(target, score + 1L, obstacles, frees)
+        }
+    }
+
+    private fun parsePosition(
+        target: Position2D,
+        score: Long,
+        obstacles: List<Char>,
+        frees: List<Char>,
+    ) {
+        if (target.score != null && target.score!! < score) return
+
+        val nextPosition = this
+            .takeIf { (frees.contains(it.value) || it == target) }
+            ?.takeIf { it.score == null || (it.score!! > score) }
+
+        if (target == nextPosition) {
+            if (target.score == null || target.score!! > score) {
+                target.score = score
+            }
+        } else {
+            nextPosition?.also { if (it.score == null || it.score!! > score) it.score = score }
+                ?.calculateScoreOnMove(target, score, obstacles, frees)
+        }
     }
 }
 
