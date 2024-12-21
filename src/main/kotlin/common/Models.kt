@@ -60,6 +60,9 @@ data class Position2D(
 ) {
     val neighbors: MutableList<Position2D> = mutableListOf()
 
+    fun distanceTo(position: Position2D) =
+        Math.abs(this.x - position.x) + Math.abs(this.y - position.y)
+
     fun getNeighbor(heading4: Heading4) = when (heading4) {
         Heading4.N -> neighbors.firstOrNull { it.x == this.x && it.y == this.y - 1 }
         Heading4.E -> neighbors.firstOrNull { it.x == this.x + 1 && it.y == this.y }
