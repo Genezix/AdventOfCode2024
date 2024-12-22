@@ -26,7 +26,7 @@ internal class Day21KtTest {
     @Test
     fun part2() {
         assertEquals(
-            expected = "",
+            expected = "154115708116294",
             actual = program.part2()
         )
     }
