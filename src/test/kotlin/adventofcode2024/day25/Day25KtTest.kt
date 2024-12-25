@@ -6,7 +6,45 @@ import org.junit.Test
 internal class Day25KtTest {
     private val program = ProgramDay25(
         brutInputs = listOf(
-            ""
+            "#####",
+            ".####",
+            ".####",
+            ".####",
+            ".#.#.",
+            ".#...",
+            ".....",
+            "",
+            "#####",
+            "##.##",
+            ".#.##",
+            "...##",
+            "...#.",
+            "...#.",
+            ".....",
+            "",
+            ".....",
+            "#....",
+            "#....",
+            "#...#",
+            "#.#.#",
+            "#.###",
+            "#####",
+            "",
+            ".....",
+            ".....",
+            "#.#..",
+            "###..",
+            "###.#",
+            "###.#",
+            "#####",
+            "",
+            ".....",
+            ".....",
+            ".....",
+            "#....",
+            "#.#..",
+            "#.#.#",
+            "#####",
         ).map { it },
         debug = true
     )
@@ -14,7 +52,7 @@ internal class Day25KtTest {
     @Test
     fun part1() {
         assertEquals(
-            expected = "",
+            expected = "3",
             actual = program.part1()
         )
     }
