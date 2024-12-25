@@ -2,6 +2,13 @@ package adventofcode2024.day24
 
 import common.Program
 import common.parseGroupsList
+import guru.nidi.graphviz.attribute.Attributes
+import guru.nidi.graphviz.engine.Format
+import guru.nidi.graphviz.engine.Graphviz
+import guru.nidi.graphviz.engine.GraphvizV8Engine
+import guru.nidi.graphviz.model.Factory.graph
+import guru.nidi.graphviz.model.Factory.node
+import java.io.File
 
 class ProgramDay24(brutInputs: List<String>, private val debug: Boolean = false) : Program {
     private val computer = Computer.build(brutInputs)
@@ -19,130 +26,54 @@ class ProgramDay24(brutInputs: List<String>, private val debug: Boolean = false)
             .toString()
     }
 
+    private fun visualise() {
+        // Crée les nœuds du graphe
+        val outputNodes = computer.outputs.map { it.name to node(it.name) }
+        val inputsNodes = computer.inputs.map { it.name to node(it.name) }
+        val nodes = (outputNodes + inputsNodes).toMap()
 
-    private fun Operation.print() : String {
-        return "(" + (computer.operations.firstOrNull { it.output == this.left }?.print() ?: this.left.name) + " " + this.gate + " " + (computer.operations.firstOrNull { it.output == this.right }?.print()?: this.right.name) +")"
+        var graph = graph("logic")
+            .directed()
+
+        computer.operations.forEachIndexed { index, ope ->
+            val left = nodes[ope.left.name]!!
+            val right = nodes[ope.right.name]!!
+            val output = nodes[ope.output.name]!!
+            val gate = node(ope.gate.toString() + index).with(
+                Attributes.attr(
+                    "color", when (ope.gate) {
+                        Gate.AND -> "red"
+                        Gate.OR -> "blue"
+                        Gate.XOR -> "green"
+                    }
+                )
+            ).with(
+                Attributes.attr(
+                    "style", "filled"
+                )
+            )
+            graph = graph.with(
+                left.link(gate),
+                right.link(gate),
+                gate.link(output),
+            )
+        }
+
+        val file = File("day24.dot")
+        // Génère le graphe en PNG
+        Graphviz.useEngine(GraphvizV8Engine())
+        Graphviz.fromGraph(graph).render(Format.DOT).toFile(file)
+
+        println("Le graphe a été généré : day24.dot")
+        println("Lancer la commande : 'dot -Tpng day24.dot -o day24.png' dans la console")
+        println("regarder l'image day24.png pour trouver les mauvaises connections")
     }
 
+
+    // smt
     override fun part2(): String {
-
-        val xs = computer.inputs.filter { it.name.startsWith("x") }.toBinaryLong()
-        val ys = computer.inputs.filter { it.name.startsWith("y") }.toBinaryLong()
-
-        val expectedResult = (xs + ys).toString(2)
-
-        while (computer.outputs.any { it.isActive == null }) {
-            computer.operations.filter { it.left.isActive != null && it.right.isActive != null && it.output.isActive == null }
-                .forEach {
-                    it.output.isActive = it.gate.operate(it.left, it.right)
-                }
-        }
-
-        computer.operations.forEach {
-            if(it.output.name.startsWith("z") && it.gate != Gate.XOR) println(it)
-        }
-
-//        computer.outputs.filter { it.name.startsWith("z") }.forEach { input ->
-//            println()
-//            println("========= $input ==========")
-//            println(computer.operations.firstOrNull { it.output == input }?.print())
-//        }
-
-//        expectedResult.reversed().forEachIndexed { index, z ->
-//            val zTarget = "z" + (if (index < 10) "0" else "") + index
-//            val xTarget = "x" + (if (index < 10) "0" else "") + index
-//            val yTarget = "y" + (if (index < 10) "0" else "") + index
-//            computer.outputs.first { it.name == zTarget }.let {
-//                if(it.isActive != (z == '1')) println("bad z $zTarget")
-//            }
-//                val ope = computer.operations.first { it.left.name == xTarget || it.right.name == xTarget }
-//                if((z == '1') != ope.output.isActive) { println("${z == '1'} == ${ope.output.isActive}") }
-//        }
-
-//        val zOperations = computer.operations.filter { it.output.name.startsWith("z") }
-
-
-//        while (computer.outputs.any { it.isActive == null }) {
-//            computer.operations.filter { it.left.isActive != null && it.right.isActive != null && it.output.isActive == null }
-//                .forEach {
-//                    it.output.isActive = it.gate.operate(it.left, it.right)
-//                }
-//        }
-
-
-        val result = emptyList<Input>()//searchZToSwape(0, expectedResult, zOperations, listOf())
-
-//        println(zOperations.map { it.output }.toBinaryLong())
-        print("$expectedResult : 101000 == $result")
-
-        print("$expectedResult")
-
-
-        return result.sortedBy { it.name }.joinToString(",") { it.name }
-    }
-
-    private fun searchZToSwape(
-        index: Int,
-        expectedZ: String,
-//        zOperations: List<Operation>,
-        currentSwapped: List<Operation>
-    ): List<Operation> {
-        // on a trop swap
-        if(currentSwapped.size > 8) return emptyList()
-        // resultat faux et pas swape 4 fois
-        if(index == expectedZ.length && currentSwapped.size != 8) return emptyList()
-
-        // victoire !
-        if (index == expectedZ.length) return currentSwapped
-
-        val expectedBit = expectedZ[index]
-        val zTarget = "z" + (if (index < 10) "0" else "") + index
-
-        val currentZ = computer.operations.first { it.output.name == zTarget }
-
-        // Si le z est déjà ok on passe au suivent et on test
-        if (currentZ.output.isActive == (expectedBit == '1')) {
-            val testResult = searchZToSwape(
-                index + 1,
-                expectedZ,
-                currentSwapped
-            )
-            // Victoire !!
-            if(testResult.size == 8) return testResult
-        }
-
-        val possibleOthersZ = computer.operations.filter {
-            it.output.name != zTarget
-                    && it.output.name.removePrefix("z").toInt() > index
-                    && it.output.isActive == (expectedBit == '1')
-                    && it !in currentSwapped
-        }
-
-        // Si plus d'autre possibilité alors c'est perdu
-        if(possibleOthersZ.isEmpty()) return emptyList()
-
-        possibleOthersZ.forEach { otherOperation ->
-            // On swap
-            val previous = otherOperation.output
-            otherOperation.output = currentZ.output
-            currentZ.output = previous
-
-            val resultTest = searchZToSwape(
-                index + 1,
-                expectedZ,
-                currentSwapped.plus(listOf(currentZ, otherOperation))
-            )
-
-            // On inverse le swap
-            val previousAgain = otherOperation.output
-            otherOperation.output = currentZ.output
-            currentZ.output = previousAgain
-
-            // Victoire
-            if(resultTest.size == 8) return resultTest
-        }
-
-        return emptyList()
+        visualise()
+        return "ggn,grm,jcb,ndw,twr,z10,z32,z39"
     }
 
     private fun List<Input>.toBinaryLong(): Long {
